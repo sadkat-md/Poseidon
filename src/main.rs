@@ -3,10 +3,11 @@ use std::io::{self, Write};
 
 
 fn main() {
+    
     let mut _init_logs = Logs::new().unwrap();
     let mut start_store = _init_logs.replay().unwrap();
         
-    loop {
+    loop {              
         println!("Welcome to Poseidon! ");
         
         println!("List of Operations Available : GET | PUT | DELETE | EXIT");
@@ -16,6 +17,7 @@ fn main() {
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
+        
         io::stdin().read_line(&mut input).unwrap();
 
         let clean_input = input.trim();

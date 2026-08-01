@@ -1,11 +1,7 @@
 use crc32fast::Hasher;
 use std::fs::{File, OpenOptions};
-use std::hash::Hash;
 use std::io::{BufReader, BufWriter, Read , Write};
-use std::path::Component;
 use std::vec;
-
-use crate::store::log::Command::Put;
 use crate::store::memory::Store;
 
 pub enum Command {
@@ -14,6 +10,7 @@ pub enum Command {
     Delete { key: String },
 }
 impl Command {
+    
     pub fn serialize(&self) -> Vec<u8> {
         let mut buffer = Vec::new();
 
