@@ -1,11 +1,10 @@
-use poseidon::store::{log::Logs, log::Command};
+use poseidon::{storage::engine::StorageEngine};
 use std::io::{self, Write};
 
 
-fn main() {
+fn main() -> io::Result<()> {
     
-    let mut _init_logs = Logs::new().unwrap();
-    let mut start_store = _init_logs.replay().unwrap();
+    let mut engine =  StorageEngine::open("storage", 1_048_576)?;
         
     loop {              
         println!("Welcome to Poseidon! ");
@@ -14,11 +13,11 @@ fn main() {
         
         print!("Enter your command : ");
         
-        io::stdout().flush().unwrap();
+        io::stdout().flush()?;
 
         let mut input = String::new();
         
-        io::stdin().read_line(&mut input).unwrap();
+        io::stdin().read_line(&mut input)?;
 
         let clean_input = input.trim();
         let mut words = clean_input.split_whitespace();
@@ -27,54 +26,33 @@ fn main() {
         let key = words.next();
         let value = words.next();
 
-        if input.trim() == "exit" {
+        if clean_input == "exit" {
             break;
         }
 
         match command_name {
             Some("GET") => {
                  if let Some(k) = key {
-                    let cmd = Command::Get { key: k.to_string() };
-                    match cmd {
-                        Command::Get { key } => {
-                            println!("Executing Get Operation For : {}", key);
-                            match start_store.get( key) {
-                                Some(value) => println!("Value : {}", value),
-                                None => println!("Key not found"), 
-                            }
-                        }
-                        _ => {}
+                    match engine.get(k)? {
+                        Some(val) => println!("Value : {}", val),
+                        None => println!("Key not found")
                     }
                  } else {
-                    println!("You must provide a key value");
+                    print!("Usage: GET <key>");
                  }
             }
             Some("PUT") => {
                 if let (Some(k),Some(v)) = (key,value) {
-                    let cmd = Command::Put{key:k.to_string(), value:v.to_string()};
-                    match cmd {
-                        Command::Put {ref key , ref value} => {
-                            println!("Executing Put Operation For Key : {} , Value : {}", key , value);
-                            _init_logs.append(&cmd).unwrap();
-                            start_store.put(key.to_string(), value.to_string());
-                        }
-                        _ => {}
-                    }
+                    engine.put(k.to_string(), v.to_string())?;
+                    println!("Key '{}' set successfully ", k);
                 } else {
                     println!("You must provide a key value and a value");
                 }
             }
             Some("DELETE") => {
                 if let Some(k) = key {
-                    let cmd = Command::Delete{key:k.to_string()};
-                    match cmd {
-                        Command::Delete {ref key} => {
-                            _init_logs.append(&cmd).unwrap();
-                            println!("Executing Delete Operation For : {}", key);
-                            start_store.delete(key.to_string());
-                        }
-                        _ => {}
-                    }
+                    engine.delete(k.to_string())?;
+                    println!("Key '{}' deleted successfully", k);
                 } else {
                     println!("You must provide a key value");
                 }
@@ -84,4 +62,5 @@ fn main() {
             }
         }
     }
+  Ok(())
 }
