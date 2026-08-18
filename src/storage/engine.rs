@@ -1,4 +1,4 @@
-use std::{fs::{self, create_dir_all}, io, path::{Path, PathBuf}};
+use std::{fs::{self, create_dir_all}, io, path::{Path, PathBuf}, vec};
 use crate::{storage::{index::Index, segment::{Segment}}, store::log::Command};
 
 pub struct StorageEngine {
@@ -127,6 +127,24 @@ impl StorageEngine {
         }
       Ok(())
      }
+    pub fn compact(&mut self) -> io::Result<()>{
+
+           if self.seg.is_empty(){
+             return Ok(());
+           }
+           let next_id = self.active.id + 1;
+           let (mut compacted, new_index) = crate::storage::compaction::compaction(&self.seg, &self.dir, next_id)?;
+           crate::storage::compaction::delete_old_segments(&self.seg)?;
+
+           for(key, loc) in new_index.iter() {
+             self.index.set(key, loc.segment_id, loc.offset);
+           }
+
+           compacted.is_active = false;
+           self.seg = vec![compacted];
+
+           Ok(())
+    }
 
     }
      

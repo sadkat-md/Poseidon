@@ -24,4 +24,8 @@ impl Index {
     pub fn remove (&mut self, key: &str)  {
          self.map.remove(key);
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &EntryLocation)> {
+        self.map.iter()
+    }
 }
